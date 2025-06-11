@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
 import { z } from 'zod';
+import type WebSocketManager from './web-server/websocket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -101,6 +102,7 @@ export class GridManager {
   private gridHtmlPath: string;
   private isInitialized = false;
   private options: GridManagerOptions;
+  private webSocketManager: WebSocketManager | null = null;
 
   constructor(options: GridManagerOptions = {}) {
     this.options = {
@@ -110,6 +112,13 @@ export class GridManager {
       ...options,
     };
     this.gridHtmlPath = join(__dirname, '..', 'web', 'grid.html');
+  }
+
+  /**
+   * Set WebSocket manager for real-time updates
+   */
+  setWebSocketManager(wsManager: WebSocketManager): void {
+    this.webSocketManager = wsManager;
   }
 
   /**
@@ -136,7 +145,7 @@ export class GridManager {
       });
 
       this.isInitialized = true;
-      console.log('GridManager: Browser initialized successfully');
+      console.error('GridManager: Browser initialized successfully');
     } catch (error) {
       throw new GridManagerError(
         'Failed to initialize browser',
@@ -209,7 +218,12 @@ export class GridManager {
 
       this.grids.set(gridId, gridInstance);
 
-      console.log(`GridManager: Grid created successfully with ID: ${gridId}`);
+      // Emit WebSocket event for grid creation
+      if (this.webSocketManager) {
+        this.webSocketManager.onGridCreated(gridId, config, config.rowData);
+      }
+
+      console.error(`GridManager: Grid created successfully with ID: ${gridId}`);
       return gridId;
     } catch (error) {
       throw new GridManagerError(
@@ -240,7 +254,12 @@ export class GridManager {
       grid.config.rowData = rowData;
       grid.lastUpdated = new Date();
 
-      console.log(`GridManager: Updated data for grid ${gridId}`);
+      // Emit WebSocket event for data update
+      if (this.webSocketManager) {
+        this.webSocketManager.onGridDataUpdated(gridId, rowData);
+      }
+
+      console.error(`GridManager: Updated data for grid ${gridId}`);
     } catch (error) {
       throw new GridManagerError(
         'Failed to update grid data',
@@ -279,7 +298,20 @@ export class GridManager {
         params
       );
 
-      console.log(`GridManager: Executed method ${method} on grid ${gridId}`);
+      // Emit WebSocket events for specific methods
+      if (this.webSocketManager) {
+        if (method === 'setFilterModel' && params && params[0]) {
+          // Get current displayed row count for filter event
+          const displayedRows = await grid.page.evaluate(() => {
+            return window.gridApi ? window.gridApi.getDisplayedRowCount() : 0;
+          });
+          this.webSocketManager.onGridFiltered(gridId, params[0], displayedRows);
+        } else if (method === 'applyColumnState' && params && params[0]) {
+          this.webSocketManager.onGridSorted(gridId, params[0]);
+        }
+      }
+
+      console.error(`GridManager: Executed method ${method} on grid ${gridId}`);
       return result;
     } catch (error) {
       throw new GridManagerError(
@@ -337,7 +369,12 @@ export class GridManager {
         throw new Error(`Unsupported export format: ${format}`);
       }
 
-      console.log(`GridManager: Exported grid ${gridId} as ${format}`);
+      // Emit WebSocket event for export
+      if (this.webSocketManager) {
+        this.webSocketManager.onGridExported(gridId, format, filename);
+      }
+
+      console.error(`GridManager: Exported grid ${gridId} as ${format}`);
       return { data, format, filename };
     } catch (error) {
       throw new GridManagerError(
@@ -386,7 +423,7 @@ export class GridManager {
         };
       });
 
-      console.log(`GridManager: Retrieved state for grid ${gridId}`);
+      console.error(`GridManager: Retrieved state for grid ${gridId}`);
       return state;
     } catch (error) {
       throw new GridManagerError(
@@ -427,7 +464,13 @@ export class GridManager {
 
       // Remove from map
       this.grids.delete(gridId);
-      console.log(`GridManager: Destroyed grid ${gridId}`);
+
+      // Emit WebSocket event for grid destruction
+      if (this.webSocketManager) {
+        this.webSocketManager.removeGrid(gridId);
+      }
+
+      console.error(`GridManager: Destroyed grid ${gridId}`);
     } catch (error) {
       throw new GridManagerError(
         'Failed to destroy grid',
@@ -442,7 +485,7 @@ export class GridManager {
    * Clean up all resources
    */
   async cleanup(): Promise<void> {
-    console.log('GridManager: Starting cleanup...');
+    console.error('GridManager: Starting cleanup...');
 
     // Destroy all grids
     const gridIds = Array.from(this.grids.keys());
@@ -465,7 +508,7 @@ export class GridManager {
     }
 
     this.isInitialized = false;
-    console.log('GridManager: Cleanup completed');
+    console.error('GridManager: Cleanup completed');
   }
 
   /**

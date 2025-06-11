@@ -16,6 +16,7 @@ import { GridManager, GridManagerError } from './grid-manager.js';
 import { setupGridTools, getAvailableDemoScenarios } from './tools/grid-tools.js';
 import { setupDataResources } from './resources/data-resources.js';
 import { getAllDemoScenarios } from './examples/demo-scenarios.js';
+import WebServer from './web-server/server.js';
 
 /**
  * Server configuration
@@ -31,6 +32,7 @@ const SERVER_CONFIG = {
  */
 let mcpServer: McpServer;
 let gridManager: GridManager;
+let webServer: WebServer;
 let isShuttingDown = false;
 
 /**
@@ -106,6 +108,41 @@ async function initializeGridManager(): Promise<GridManager> {
     await manager.initialize();
     logToStderr('GridManager initialized successfully');
     return manager;
+  });
+}
+
+/**
+ * Initialize the WebServer with optimal settings for MCP usage
+ */
+async function initializeWebServer(): Promise<WebServer> {
+  return timeOperation('WebServer initialization', async () => {
+    logToStderr('Initializing WebServer...');
+    
+    const port = parseInt(process.env.WEB_SERVER_PORT || '3000');
+    const host = process.env.WEB_SERVER_HOST || 'localhost';
+    
+    debugLog('WebServer configuration', {
+      port,
+      host,
+      enableCors: true,
+    });
+    
+    const server = new WebServer(gridManager, {
+      port,
+      host,
+      enableCors: true,
+    });
+
+    // Connect GridManager to WebSocket events if WebSocket manager exists
+    if (server.getWebSocketManager()) {
+      gridManager.setWebSocketManager(server.getWebSocketManager());
+    }
+
+    // Start the web server
+    await server.start();
+    
+    logToStderr(`WebServer initialized successfully on http://${host}:${port}`);
+    return server;
   });
 }
 
@@ -290,21 +327,33 @@ function setupHelpTools(server: McpServer, gridManager: GridManager): void {
           activeGrids: activeGrids.length,
           gridIds: activeGrids
         },
+        webServer: {
+          isRunning: webServer?.isServerRunning() || false,
+          url: webServer?.getUrl() || 'Not available',
+          dashboardUrl: webServer?.getUrl() || 'Not available',
+        },
         capabilities: {
-          tools: 10, // Total number of tools
+          tools: 11, // Total number of tools
           resources: 4, // Total number of resource patterns
           demoScenarios: getAllDemoScenarios().length,
           browserAutomation: true,
           dataExport: true,
           filtering: true,
-          sorting: true
+          sorting: true,
+          realTimeVisualization: !!webServer
         },
         usage: {
           quickCommands: [
             "help - Show this help information",
             "list_demo_scenarios - See available demo data",
-            "load_demo_scenario with scenarioId 'sales-dashboard' - Quick start"
-          ]
+            "load_demo_scenario with scenarioId 'sales-dashboard' - Quick start",
+            "get_grid_url with gridId - Get web viewer URL for real-time visualization"
+          ],
+          webVisualization: webServer ? [
+            `Dashboard: ${webServer.getUrl()}`,
+            `Individual grid viewer: ${webServer.getUrl()}/grid/{gridId}`,
+            "Real-time updates as you manipulate grids through Claude"
+          ] : ["Web visualization not available"]
         }
       };
 
@@ -346,11 +395,22 @@ async function setupMcpServer(): Promise<McpServer> {
     // Initialize GridManager
     gridManager = await initializeGridManager();
 
+    // Initialize WebServer (optional, skip if disabled)
+    if (process.env.DISABLE_WEB_SERVER !== 'true') {
+      try {
+        webServer = await initializeWebServer();
+      } catch (error) {
+        logToStderr(`WebServer initialization failed, continuing without web interface: ${error instanceof Error ? error.message : 'Unknown error'}`, 'WARN');
+      }
+    } else {
+      logToStderr('WebServer disabled by DISABLE_WEB_SERVER environment variable');
+    }
+
     // Register tools and resources
     logToStderr('Registering tools and resources...');
     debugLog('Registering AG Grid tools and data resources');
     
-    setupGridTools(server, gridManager);
+    setupGridTools(server, gridManager, webServer);
     setupDataResources(server, gridManager);
     setupHelpTools(server, gridManager);
 
@@ -360,7 +420,9 @@ async function setupMcpServer(): Promise<McpServer> {
       resourcesRegistered: true,
       helpToolsRegistered: true,
       gridManagerReady: true,
-      totalTools: 10, // 7 grid tools + 3 help tools
+      webServerReady: true,
+      webServerUrl: webServer.getUrl(),
+      totalTools: 11, // 8 grid tools + 3 help tools
       totalResources: 4,
     });
     
@@ -381,6 +443,13 @@ async function handleShutdown(signal?: string): Promise<void> {
   logToStderr(`Received ${signal || 'shutdown signal'}, cleaning up...`);
 
   try {
+    // Stop WebServer
+    if (webServer) {
+      logToStderr('Stopping WebServer...');
+      await webServer.stop();
+      logToStderr('WebServer stopped');
+    }
+
     // Clean up GridManager
     if (gridManager) {
       logToStderr('Cleaning up GridManager...');

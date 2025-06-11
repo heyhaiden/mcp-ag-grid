@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { GridManager, GridManagerError, type GridConfig, type ExportFormat } from '../grid-manager.js';
 import { getAllDemoScenarios, getDemoScenarioById, type DemoScenario } from '../examples/demo-scenarios.js';
+import type WebServer from '../web-server/server.js';
 
 // Zod schemas for tool parameter validation
 const ColumnDefSchema = z.object({
@@ -101,8 +102,9 @@ function formatError(message: string, error?: Error | GridManagerError) {
  * Set up all AG Grid MCP tools
  * @param server - The MCP server instance
  * @param gridManager - The GridManager instance
+ * @param webServer - The web server instance (optional)
  */
-export function setupGridTools(server: McpServer, gridManager: GridManager): void {
+export function setupGridTools(server: McpServer, gridManager: GridManager, webServer?: WebServer): void {
   
   // Tool 1: Create Grid
   server.tool(
@@ -421,7 +423,47 @@ export function setupGridTools(server: McpServer, gridManager: GridManager): voi
     }
   );
 
-  console.log('✅ AG Grid MCP tools registered successfully (7 tools total)');
+  // Tool 8: Get Grid URL (if web server is available)
+  if (webServer) {
+    server.tool(
+      'get_grid_url',
+      'Get the web viewer URL for a specific grid. Use this to view grids in your browser in real-time.',
+      {
+        gridId: z.string().describe('Unique identifier of the grid to get URL for'),
+      },
+      async (params) => {
+        try {
+          // Verify grid exists
+          gridManager.getGridInfo(params.gridId);
+          
+          const gridUrl = webServer.getGridUrl(params.gridId);
+          const dashboardUrl = webServer.getUrl();
+          
+          return formatSuccess(
+            `Grid viewer URL generated successfully`,
+            {
+              gridId: params.gridId,
+              gridUrl: gridUrl,
+              dashboardUrl: dashboardUrl,
+              instructions: [
+                `Open ${gridUrl} to view this specific grid`,
+                `Open ${dashboardUrl} to view the main dashboard`,
+                'The grid will update in real-time as you manipulate it through Claude'
+              ]
+            }
+          );
+        } catch (error) {
+          return formatError(
+            `Failed to get grid URL for grid: ${params.gridId}`,
+            error as Error
+          );
+        }
+      }
+    );
+  }
+
+  const toolCount = webServer ? 8 : 7;
+  console.error(`✅ AG Grid MCP tools registered successfully (${toolCount} tools total)`);
 }
 
 // Additional utility functions that might be useful
