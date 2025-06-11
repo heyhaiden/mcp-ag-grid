@@ -14,7 +14,7 @@ const ColumnDefSchema = z.object({
   sortable: z.boolean().optional().default(true).describe('Whether column is sortable'),
   filter: z.boolean().optional().default(true).describe('Whether column has filter'),
   resizable: z.boolean().optional().default(true).describe('Whether column is resizable'),
-  type: z.enum(['text', 'number', 'date', 'boolean']).optional().describe('Column data type for appropriate filtering and sorting'),
+  // Note: Column types removed as they require custom columnTypes definition in AG Grid v33
 }).describe('Column definition for AG Grid');
 
 const CreateGridSchema = z.object({

@@ -2,6 +2,25 @@
  * Grid Viewer JavaScript for individual grid display
  */
 
+// Enable AG Grid ValidationModule in development for better error diagnosis
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof agGrid !== 'undefined' && agGrid.ModuleRegistry && agGrid.ValidationModule) {
+        // Detect development mode from various indicators
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1' ||
+                             window.location.search.includes('debug=true');
+        
+        if (isDevelopment) {
+            if (agGrid.ValidationModule) {
+                console.log('AG Grid: Enabling ValidationModule for enhanced error diagnosis');
+                agGrid.ModuleRegistry.registerModules([agGrid.ValidationModule]);
+            } else {
+                console.log('AG Grid: ValidationModule not available in this build (community edition from CDN)');
+            }
+        }
+    }
+});
+
 class GridViewer {
     constructor() {
         this.socket = null;
@@ -158,8 +177,8 @@ class GridViewer {
                 resizable: true,
                 floatingFilter: true
             },
-            enableRangeSelection: true,
-            rowSelection: 'multiple',
+            cellSelection: true,
+            rowSelection: { mode: 'multiRow' },
             suppressMenuHide: true,
             pagination: true,
             paginationPageSize: 100,

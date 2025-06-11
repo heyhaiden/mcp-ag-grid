@@ -517,6 +517,24 @@ function setupSignalHandlers(): void {
       logToStderr(`Process exiting with code: ${code}`);
     }
   });
+
+  // Handle parent process death (when Claude Desktop closes)
+  process.on('disconnect', () => {
+    logToStderr('Parent process disconnected (Claude Desktop closed)');
+    handleShutdown('disconnect').catch(() => {
+      process.exit(1);
+    });
+  });
+
+  // Additional cleanup on various exit scenarios
+  ['SIGHUP', 'SIGQUIT', 'SIGABRT'].forEach(signal => {
+    process.on(signal, () => {
+      logToStderr(`Received ${signal}`);
+      handleShutdown(signal).catch(() => {
+        process.exit(1);
+      });
+    });
+  });
 }
 
 /**

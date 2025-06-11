@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AG Grid MCP Server</title>
     
-    <!-- AG Grid Community CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@33/styles/ag-grid.css">
+    <!-- AG Grid Community CSS - Using v33 Theming API only -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@33/styles/ag-theme-quartz.css">
     
     <style>
@@ -54,6 +53,17 @@
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@33/dist/ag-grid-community.min.js"></script>
     
     <script>
+        // Enable AG Grid ValidationModule in development for better error diagnosis
+        if (typeof agGrid !== 'undefined' && agGrid.ModuleRegistry) {
+            // Always enable validation in MCP server context for better debugging
+            if (agGrid.ValidationModule) {
+                console.log('AG Grid: Enabling ValidationModule for enhanced error diagnosis');
+                agGrid.ModuleRegistry.registerModules([agGrid.ValidationModule]);
+            } else {
+                console.log('AG Grid: ValidationModule not available in this build (community edition from CDN)');
+            }
+        }
+
         // Global variables to store grid API references
         window.gridApi = null;
         window.columnApi = null;
@@ -101,11 +111,9 @@
                     })),
                     rowData: config.rowData,
                     
-                    // Selection options
-                    rowSelection: 'multiple',
-                    enableRangeSelection: true,
-                    enableRangeHandle: true,
-                    enableFillHandle: true,
+                    // Selection options (v33 syntax)
+                    rowSelection: { mode: 'multiRow' },
+                    cellSelection: true,
                     
                     // Grid features
                     animateRows: true,
