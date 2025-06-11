@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid MCP Server - Dashboard</title>
+    
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="/ag-grid/ag-grid.css">
+    <link rel="stylesheet" href="/ag-grid/ag-theme-alpine.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/dashboard.css">
+    
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>AG-Grid MCP Server Dashboard</h1>
+            <div class="status-indicator">
+                <span id="status-dot" class="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Active Grids:</span>
+                <span id="active-grids-count" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Records:</span>
+                <span id="total-records-count" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Server Uptime:</span>
+                <span id="server-uptime" class="stat-value">--</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="grids-section">
+                <h2>Active Grids</h2>
+                <div id="grids-container" class="grids-container">
+                    <div id="no-grids" class="no-grids">
+                        <p>No grids active</p>
+                        <p class="hint">Create a grid using Claude Desktop to see it here!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="events-section">
+                <h2>Live Events</h2>
+                <div id="events-container" class="events-container">
+                    <div id="events-list" class="events-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Card Template -->
+    <template id="grid-card-template">
+        <div class="grid-card" data-grid-id="">
+            <div class="grid-header">
+                <h3 class="grid-title"></h3>
+                <div class="grid-actions">
+                    <button class="btn-view" onclick="viewGrid(this.dataset.gridId)">View</button>
+                    <button class="btn-refresh" onclick="refreshGrid(this.dataset.gridId)">↻</button>
+                </div>
+            </div>
+            <div class="grid-info">
+                <div class="info-row">
+                    <span class="info-label">Columns:</span>
+                    <span class="info-value grid-columns">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Rows:</span>
+                    <span class="info-value grid-rows">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Created:</span>
+                    <span class="info-value grid-created">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Updated:</span>
+                    <span class="info-value grid-updated">-</span>
+                </div>
+            </div>
+            <div class="grid-status">
+                <span class="status-badge grid-status-badge">Active</span>
+                <span class="filter-indicator" style="display: none;">🔍 Filtered</span>
+                <span class="sort-indicator" style="display: none;">📊 Sorted</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Event Item Template -->
+    <template id="event-item-template">
+        <div class="event-item">
+            <div class="event-header">
+                <span class="event-type"></span>
+                <span class="event-time"></span>
+            </div>
+            <div class="event-details">
+                <span class="event-grid">Grid: <span class="event-grid-id"></span></span>
+                <span class="event-data"></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- JavaScript -->
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

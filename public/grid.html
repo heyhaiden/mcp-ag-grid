@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid Viewer</title>
+    
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="/ag-grid/ag-grid.css">
+    <link rel="stylesheet" href="/ag-grid/ag-theme-alpine.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/grid-viewer.css">
+    
+    <!-- AG Grid JavaScript -->
+    <script src="/ag-grid-js/ag-grid-community.min.js"></script>
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <a href="/" class="back-button">← Dashboard</a>
+                <h1 id="grid-title">AG Grid Viewer</h1>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span id="connection-dot" class="status-dot"></span>
+                    <span id="connection-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <span class="grid-id-label">Grid ID: <span id="current-grid-id">-</span></span>
+                <button id="refresh-button" class="btn btn-secondary">↻ Refresh</button>
+            </div>
+            <div class="toolbar-right">
+                <div class="grid-stats">
+                    <span id="row-count" class="stat">Rows: -</span>
+                    <span id="column-count" class="stat">Columns: -</span>
+                    <span id="last-updated" class="stat">Updated: -</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar" id="filter-bar" style="display: none;">
+            <div class="filter-info">
+                <span class="filter-label">🔍 Filters Active:</span>
+                <span id="filter-details" class="filter-details">-</span>
+                <button id="clear-filters" class="btn btn-small">Clear</button>
+            </div>
+        </div>
+
+        <div class="sort-bar" id="sort-bar" style="display: none;">
+            <div class="sort-info">
+                <span class="sort-label">📊 Sorting:</span>
+                <span id="sort-details" class="sort-details">-</span>
+                <button id="clear-sorting" class="btn btn-small">Clear</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="grid-container" class="ag-theme-alpine grid-container">
+                <div id="loading-message" class="loading-message">
+                    <div class="spinner"></div>
+                    <p>Loading grid data...</p>
+                </div>
+                <div id="error-message" class="error-message" style="display: none;">
+                    <h3>Error Loading Grid</h3>
+                    <p id="error-text">Grid not found or failed to load.</p>
+                    <button onclick="location.reload()" class="btn">Retry</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="events-panel" id="events-panel">
+            <div class="events-header">
+                <h3>Live Events</h3>
+                <button id="toggle-events" class="btn btn-small">Hide</button>
+            </div>
+            <div id="events-list" class="events-list"></div>
+        </div>
+    </div>
+
+    <!-- Event Item Template -->
+    <template id="event-item-template">
+        <div class="event-item">
+            <div class="event-header">
+                <span class="event-type"></span>
+                <span class="event-time"></span>
+            </div>
+            <div class="event-details"></div>
+        </div>
+    </template>
+
+    <!-- JavaScript -->
+    <script src="/js/grid-viewer.js"></script>
+</body>
+</html>
