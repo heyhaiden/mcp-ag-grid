@@ -2,7 +2,7 @@
 
 ![Header Image](public/assets/mcp-ag-grid-min.png)
 
-A Model Context Protocol (MCP) server that provides powerful data visualization and manipulation capabilities using AG Grid through headless browser automation. This server enables Claude to create, manipulate, and export data grids with advanced features like sorting, filtering, and statistical analysis.
+A Model Context Protocol (MCP) server that provides data visualization and manipulation capabilities using AG Grid through headless browser automation. This server enables Claude to create, manipulate, and export data grids with advanced features like sorting, filtering, and statistical analysis.
 
 ## Features
 
