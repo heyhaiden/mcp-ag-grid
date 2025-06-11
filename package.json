@@ -26,16 +26,25 @@
     "postinstall": "npm run build",
     "validate": "npm run lint && npm run test"
   },
-  "keywords": ["mcp", "ag-grid", "data-visualization", "server"],
+  "keywords": [
+    "mcp",
+    "ag-grid",
+    "data-visualization",
+    "server"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "ag-grid-community": "^33.3.2",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
     "puppeteer": "^24.10.0",
+    "socket.io": "^4.7.5",
     "zod": "^3.25.61"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^24.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
