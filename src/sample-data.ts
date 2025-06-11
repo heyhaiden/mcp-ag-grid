@@ -402,6 +402,6 @@ export function exportSampleDataAsJson(): string {
  * Main function for CLI usage
  */
 export function main() {
-  console.log('Generating sample data...\n');
-  console.log(exportSampleDataAsJson());
+  console.error('Generating sample data...\n');
+  console.error(exportSampleDataAsJson());
 }

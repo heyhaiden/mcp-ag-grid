@@ -400,7 +400,7 @@ export function setupDataResources(server: McpServer, gridManager: GridManager):
     }
   );
 
-  console.log('✅ AG Grid data resources registered successfully');
+  console.error('✅ AG Grid data resources registered successfully');
 }
 
 /**

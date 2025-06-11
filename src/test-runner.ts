@@ -62,7 +62,7 @@ class TestRunner {
     };
     const reset = '\x1b[0m';
     
-    console.log(`${colors[level]}[${timestamp}] [${level}]${reset} ${message}`);
+    console.error(`${colors[level]}[${timestamp}] [${level}]${reset} ${message}`);
   }
 
   /**
