@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid MCP Server</title>
+    
+    <!-- AG Grid Community CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@33/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@33/styles/ag-theme-quartz.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        #gridContainer {
+            width: 100%;
+            height: 600px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        .grid-info {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-info">
+        <strong>AG Grid MCP Server</strong> - Ready for configuration
+    </div>
+    
+    <div id="gridContainer" class="ag-theme-quartz"></div>
+    
+    <!-- AG Grid Community JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@33/dist/ag-grid-community.min.js"></script>
+    
+    <script>
+        // Global variables to store grid API references
+        window.gridApi = null;
+        window.columnApi = null;
+        window.currentGridOptions = null;
+        
+        /**
+         * Creates and initializes an AG Grid with the provided configuration
+         * @param {Object} config - Grid configuration object
+         * @param {Array} config.columnDefs - Column definitions
+         * @param {Array} config.rowData - Row data
+         * @param {Object} config.gridOptions - Additional grid options (optional)
+         * @returns {Object} - Object containing gridApi and columnApi references
+         */
+        window.createAGGrid = function(config) {
+            try {
+                // Validate required parameters
+                if (!config) {
+                    throw new Error('Configuration object is required');
+                }
+                
+                if (!config.columnDefs || !Array.isArray(config.columnDefs)) {
+                    throw new Error('columnDefs must be provided as an array');
+                }
+                
+                if (!config.rowData || !Array.isArray(config.rowData)) {
+                    throw new Error('rowData must be provided as an array');
+                }
+                
+                // Clear any existing error messages
+                const existingError = document.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                // Default grid options with common features enabled
+                const defaultGridOptions = {
+                    columnDefs: config.columnDefs.map(col => ({
+                        ...col,
+                        sortable: true,
+                        filter: true,
+                        resizable: true,
+                        ...(col.sortable === false ? { sortable: false } : {}),
+                        ...(col.filter === false ? { filter: false } : {}),
+                        ...(col.resizable === false ? { resizable: false } : {})
+                    })),
+                    rowData: config.rowData,
+                    
+                    // Selection options
+                    rowSelection: 'multiple',
+                    enableRangeSelection: true,
+                    enableRangeHandle: true,
+                    enableFillHandle: true,
+                    
+                    // Grid features
+                    animateRows: true,
+                    enableCellTextSelection: true,
+                    ensureDomOrder: true,
+                    
+                    // Default column options
+                    defaultColDef: {
+                        sortable: true,
+                        filter: true,
+                        resizable: true,
+                        minWidth: 100,
+                        flex: 1
+                    },
+                    
+                    // Event handlers
+                    onGridReady: function(params) {
+                        console.log('AG Grid is ready');
+                        window.gridApi = params.api;
+                        window.columnApi = params.columnApi;
+                        
+                        // Auto-size columns to fit content
+                        params.api.sizeColumnsToFit();
+                        
+                        // Dispatch custom event
+                        window.dispatchEvent(new CustomEvent('agGridReady', { 
+                            detail: { api: params.api, columnApi: params.columnApi } 
+                        }));
+                    },
+                    
+                    onFirstDataRendered: function(params) {
+                        console.log('First data rendered');
+                        params.api.sizeColumnsToFit();
+                    }
+                };
+                
+                // Merge with user-provided grid options
+                const finalGridOptions = {
+                    ...defaultGridOptions,
+                    ...config.gridOptions,
+                    // Ensure columnDefs and rowData from config take precedence
+                    columnDefs: defaultGridOptions.columnDefs,
+                    rowData: config.rowData
+                };
+                
+                // Store current options for reference
+                window.currentGridOptions = finalGridOptions;
+                
+                // Get grid container
+                const gridContainer = document.getElementById('gridContainer');
+                if (!gridContainer) {
+                    throw new Error('Grid container element not found');
+                }
+                
+                // Clear existing grid if any
+                if (window.gridApi) {
+                    window.gridApi.destroy();
+                }
+                
+                // Create the grid
+                agGrid.createGrid(gridContainer, finalGridOptions);
+                
+                console.log('AG Grid created successfully', {
+                    columns: config.columnDefs.length,
+                    rows: config.rowData.length
+                });
+                
+                return {
+                    success: true,
+                    message: 'Grid created successfully',
+                    gridApi: window.gridApi,
+                    columnApi: window.columnApi
+                };
+                
+            } catch (error) {
+                console.error('Error creating AG Grid:', error);
+                
+                // Display error message in the UI
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `Error: ${error.message}`;
+                
+                const gridContainer = document.getElementById('gridContainer');
+                if (gridContainer && gridContainer.parentNode) {
+                    gridContainer.parentNode.insertBefore(errorDiv, gridContainer);
+                }
+                
+                return {
+                    success: false,
+                    error: error.message,
+                    gridApi: null,
+                    columnApi: null
+                };
+            }
+        };
+        
+        /**
+         * Utility function to get current grid data
+         * @returns {Array} Current row data
+         */
+        window.getGridData = function() {
+            if (!window.gridApi) {
+                throw new Error('Grid not initialized');
+            }
+            
+            const rowData = [];
+            window.gridApi.forEachNode(node => rowData.push(node.data));
+            return rowData;
+        };
+        
+        /**
+         * Utility function to update grid data
+         * @param {Array} newData - New row data
+         */
+        window.updateGridData = function(newData) {
+            if (!window.gridApi) {
+                throw new Error('Grid not initialized');
+            }
+            
+            window.gridApi.setGridOption('rowData', newData);
+        };
+        
+        /**
+         * Utility function to get selected rows
+         * @returns {Array} Selected row data
+         */
+        window.getSelectedRows = function() {
+            if (!window.gridApi) {
+                throw new Error('Grid not initialized');
+            }
+            
+            return window.gridApi.getSelectedRows();
+        };
+        
+        // Log that the grid system is ready
+        console.log('AG Grid MCP Server - Grid system initialized and ready');
+        
+        // Dispatch ready event
+        window.dispatchEvent(new CustomEvent('agGridSystemReady'));
+    </script>
+</body>
+</html>

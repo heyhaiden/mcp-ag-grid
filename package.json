@@ -1,0 +1,43 @@
+{
+  "name": "ag-grid-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for AG Grid data visualization and manipulation",
+  "main": "build/server.js",
+  "type": "module",
+  "bin": {
+    "ag-grid-mcp-server": "./build/server.js"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc && npm run make-executable",
+    "build:prod": "npm run clean && tsc --sourceMap false && npm run make-executable",
+    "clean": "rm -rf build",
+    "make-executable": "chmod +x build/server.js",
+    "start": "node build/server.js",
+    "start:debug": "node --inspect build/server.js",
+    "dev": "ts-node --esm src/server.ts",
+    "dev:debug": "ts-node --esm --inspect src/server.ts",
+    "test": "npm run build && node build/test-runner.js",
+    "test:dev": "ts-node --esm src/test-runner.ts",
+    "test:watch": "nodemon --ext ts --exec \"npm run test:dev\"",
+    "sample-data": "ts-node --esm src/sample-data.ts",
+    "sample-data:build": "npm run build && node build/sample-data.js",
+    "lint": "tsc --noEmit",
+    "prepack": "npm run build:prod",
+    "postinstall": "npm run build",
+    "validate": "npm run lint && npm run test"
+  },
+  "keywords": ["mcp", "ag-grid", "data-visualization", "server"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "ag-grid-community": "^33.3.2",
+    "puppeteer": "^24.10.0",
+    "zod": "^3.25.61"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

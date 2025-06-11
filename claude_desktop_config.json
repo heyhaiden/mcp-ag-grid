@@ -1,0 +1,86 @@
+{
+  "mcpServers": {
+    "ag-grid": {
+      "command": "node",
+      "args": ["/Users/heyhaiden/Documents/GitHub/mcp-ag-grid/build/server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+
+// Alternative configurations:
+
+// 1. Using absolute path (recommended for production)
+// {
+//   "mcpServers": {
+//     "ag-grid": {
+//       "command": "node",
+//       "args": ["/full/path/to/your/mcp-ag-grid/build/server.js"],
+//       "env": {
+//         "NODE_ENV": "production"
+//       }
+//     }
+//   }
+// }
+
+// 2. Using npm global installation
+// {
+//   "mcpServers": {
+//     "ag-grid": {
+//       "command": "ag-grid-mcp-server"
+//     }
+//   }
+// }
+
+// 3. Development configuration with debugging
+// {
+//   "mcpServers": {
+//     "ag-grid": {
+//       "command": "node", 
+//       "args": [
+//         "--enable-source-maps",
+//         "--inspect=9229",
+//         "/path/to/mcp-ag-grid/build/server.js"
+//       ],
+//       "env": {
+//         "NODE_ENV": "development",
+//         "DEBUG": "ag-grid-mcp-server:*"
+//       }
+//     }
+//   }
+// }
+
+// 4. Configuration with custom Puppeteer settings
+// {
+//   "mcpServers": {
+//     "ag-grid": {
+//       "command": "node",
+//       "args": ["/path/to/mcp-ag-grid/build/server.js"],
+//       "env": {
+//         "NODE_ENV": "production",
+//         "PUPPETEER_EXECUTABLE_PATH": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+//         "PUPPETEER_DISABLE_HEADLESS_WARNING": "true"
+//       }
+//     }
+//   }
+// }
+
+// 5. Configuration for Windows
+// {
+//   "mcpServers": {
+//     "ag-grid": {
+//       "command": "node.exe",
+//       "args": ["C:\\path\\to\\mcp-ag-grid\\build\\server.js"],
+//       "env": {
+//         "NODE_ENV": "production"
+//       }
+//     }
+//   }
+// }
+
+// Platform-specific paths:
+// macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+// Windows: %APPDATA%\Claude\claude_desktop_config.json
+// Linux: ~/.config/Claude/claude_desktop_config.json
